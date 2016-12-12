@@ -5,23 +5,28 @@ defmodule Bugsnag.Payload do
     url: Bugsnag.Mixfile.project[:package][:links][:github],
   }
 
-  defstruct api_key: nil, notifier: @notifier_info, events: nil
+  defstruct api_key: nil, notifier: @notifier_info, events: []
 
-  def new(exception, stacktrace, options) when is_map(options) do
-    new(exception, stacktrace, Map.to_list(options))
+  def new do
+    new([])
   end
 
-  def new(exception, stacktrace, options) do
+  def new(options) when is_map(options) do
+    new(Map.to_list(options))
+  end
+  def new(options) do
     %__MODULE__{}
-    |> Map.put(:apiKey, fetch_option(options, :api_key))
-    |> add_event(exception, stacktrace, options)
+    |> Map.put(:api_key, fetch_option(options, :api_key))
   end
 
   defp fetch_option(options, key, default \\ "development") do
-    Keyword.get options, key, Application.get_env(:bugsnag, key, default)
+    Keyword.get(options, key, Application.get_env(:bugsnag, key, default))
   end
 
-  defp add_event(payload, exception, stacktrace, options) do
+  def add_event(payload, exception, stacktrace, options) when is_map(options) do
+    add_event(payload, exception, stacktrace, Map.to_list(options))
+  end
+  def add_event(payload, exception, stacktrace, options) do
     error = Exception.normalize(:error, exception)
 
     event =
@@ -35,7 +40,7 @@ defmodule Bugsnag.Payload do
       |> add_metadata(Keyword.get(options, :metadata))
       |> add_release_stage(fetch_option(options, :release_stage, "production"))
 
-    Map.put payload, :events, [event]
+    Map.put payload, :events, [event | payload.events]
   end
 
   defp add_exception(event, exception, stacktrace) do

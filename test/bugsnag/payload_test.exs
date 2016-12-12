@@ -13,7 +13,7 @@ defmodule Bugsnag.PayloadTest do
   end
 
   def get_payload(options \\ []) do
-    apply Payload, :new, List.insert_at(get_problem, -1, options)
+    apply(Payload, :add_event, [Payload.new(options)] ++ get_problem ++ [options])
   end
 
   def get_event(options \\ []) do
@@ -47,7 +47,7 @@ defmodule Bugsnag.PayloadTest do
         exception -> {exception, System.stacktrace}
       end
 
-    %{events: [%{exceptions: [%{stacktrace: stacktrace}]}]} = Payload.new(exception, stacktrace, [])
+    %{events: [%{exceptions: [%{stacktrace: stacktrace}]}]} = Payload.add_event(Payload.new, exception, stacktrace, [])
     assert [%{file: "lib/enum.ex", lineNumber: _, method: _},
             %{file: "test/bugsnag/payload_test.exs", lineNumber: _, method: ~s(Bugsnag.PayloadTest."test it generates correct stacktraces"/1)}
             | _] = stacktrace
@@ -66,7 +66,7 @@ defmodule Bugsnag.PayloadTest do
     rescue
       exception -> {exception, System.stacktrace}
     end
-    %{events: [%{exceptions: [%{stacktrace: stacktrace}]}]} = Payload.new(exception, stacktrace, [])
+    %{events: [%{exceptions: [%{stacktrace: stacktrace}]}]} = Payload.add_event(Payload.new, exception, stacktrace, [])
     assert [%{file: "unknown", lineNumber: 0, method: "Fart.poo(:butts, 1, \"foo\\n\")"},
             %{file: "test/bugsnag/payload_test.exs", lineNumber: _, method: _, code: _} | _] = stacktrace
   end
@@ -98,22 +98,33 @@ defmodule Bugsnag.PayloadTest do
   end
 
   test "it sets the API key if configured" do
-    assert "FAKEKEY" == get_payload.apiKey
+    assert "FAKEKEY" == get_payload.api_key
   end
 
   test "it sets the API key from options, even when configured" do
-    assert "anotherkey" == get_payload(api_key: "anotherkey").apiKey
+    assert "anotherkey" == get_payload(api_key: "anotherkey").api_key
   end
 
   test "is sets the device info if given" do
-    evt = get_event(os_version: "some-version 1.0", hostname: "some-host")
-    assert "some-version 1.0" == evt.device.osVersion
-    assert "some-host"        == evt.device.hostname
+    event = get_event(os_version: "some-version 1.0", hostname: "some-host")
+    assert "some-version 1.0" == event.device.osVersion
+    assert "some-host"        == event.device.hostname
   end
 
   test "it reports the notifier" do
     assert %{name: "Bugsnag Elixir",
              url: "https://github.com/jarednorman/bugsnag-elixir",
              version: _} = get_payload.notifier
+  end
+
+  test "adding multiple error events" do
+    [exception, stacktrace] = get_problem()
+    options = []
+    assert Payload.new
+    |> Payload.add_event(exception, stacktrace, options)
+    |> Payload.add_event(exception, stacktrace, options)
+    |> Map.get(:events)
+    |> length
+    == 2
   end
 end

@@ -2,6 +2,8 @@ defmodule Bugsnag do
   use Application
   import Supervisor.Spec
 
+  require Logger
+
   alias Bugsnag.Payload
 
   @notify_url "https://notify.bugsnag.com"
@@ -13,7 +15,9 @@ defmodule Bugsnag do
     |> Enum.map(fn {k, v} -> {k, eval_config(v)} end)
 
     case config[:use_logger] |> to_string do
-      "true" -> :error_logger.add_report_handler(Bugsnag.Logger)
+      "true" ->
+        :error_logger.add_report_handler(Bugsnag.Logger)
+      _ -> :ok
     end
 
     # Update Application config with evaluated configuration
@@ -27,6 +31,7 @@ defmodule Bugsnag do
     Application.put_env(:bugsnag, :api_key, config[:api_key])
 
     children = [
+      worker(Bugsnag.Worker, []),
       supervisor(Task.Supervisor, [[name: Bugsnag.TaskSupervisor, restart: :transient]])
     ]
 
@@ -34,17 +39,20 @@ defmodule Bugsnag do
     Supervisor.start_link(children, opts)
   end
 
+  def subscribe do
+    Bugsnag.Worker.subscribe
+  end
+
+  def unsubscribe do
+    Bugsnag.Worker.unsubscribe
+  end
+
   @doc """
   Report the exception without waiting for the result of the Bugsnag API call.
   (I.e. this might fail silently)
   """
   def report(exception, options \\ []) do
-    Task.Supervisor.start_child(
-      Bugsnag.TaskSupervisor,
-      __MODULE__,
-      :sync_report,
-      [exception, add_stacktrace(options)]
-    )
+    Bugsnag.Worker.enqueue(exception, add_stacktrace(options))
   end
 
   defp add_stacktrace(options) when is_list(options) do
@@ -56,7 +64,8 @@ defmodule Bugsnag do
   def sync_report(exception, options \\ []) do
     stacktrace = options[:stacktrace] || System.stacktrace
 
-    Payload.new(exception, stacktrace, options)
+    Payload.new(options)
+    |> Payload.add_event(exception, stacktrace, options)
     |> to_json
     |> send_notification
     |> case do
@@ -66,7 +75,6 @@ defmodule Bugsnag do
       _                            -> {:error, :unknown}
     end
   end
-
 
   def to_json(payload) do
     payload |> Poison.encode!

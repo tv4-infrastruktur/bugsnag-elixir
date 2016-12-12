@@ -9,6 +9,7 @@ defmodule Bugsnag.Mixfile do
      description: """
        An Elixir interface to the Bugsnag API
      """,
+     preferred_cli_env: ["test.watch": :test],
      deps: deps]
   end
 
@@ -28,6 +29,7 @@ defmodule Bugsnag.Mixfile do
     [{:httpoison, "~> 0.9"},
      {:poison, "~> 1.5 or ~> 2.0"},
      {:ex_doc, ">= 0.0.0", only: :dev},
+     {:mix_test_watch, "~> 0.2", only: :test},
      {:meck, "~> 0.8.3", only: :test}]
   end
 end
