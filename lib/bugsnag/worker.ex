@@ -5,6 +5,7 @@ defmodule Bugsnag.Worker do
   @report_interval 1000
   @notify_url "https://notify.bugsnag.com"
   @request_headers [{"Content-Type", "application/json"}]
+  @http_client Application.get_env(:bugsnag, :http_client, HTTPotion)
 
   def start_link do
     GenServer.start_link(__MODULE__, [], name: __MODULE__)
@@ -61,8 +62,7 @@ defmodule Bugsnag.Worker do
     {:noreply, state}
   end
   def handle_cast(:report, state) do
-    send_report(state.payload)
-    notify(state.subscribers, {:report, state.payload})
+    send_report(state)
     {:noreply, %{state | payload: Bugsnag.Payload.new}}
   end
 
@@ -71,20 +71,21 @@ defmodule Bugsnag.Worker do
     {:noreply, state}
   end
 
-  defp send_report(payload) do
-    payload
+  defp send_report(state) do
+    result = state.payload
     |> Poison.encode!
-    # |> send_notification
-    # |> case do
-    #   {:ok, %{status_code: 200}}   -> :ok
-    #   {:ok, %{status_code: other}} -> {:error, "status_#{other}"}
-    #   {:error, %{reason: reason}}  -> {:error, reason}
-    #   _                            -> {:error, :unknown}
-    # end
+    |> send_notification
+    |> case do
+      %{status_code: 200}   -> :ok
+      %{status_code: other} -> {:error, "status_#{other}"}
+      %{message: reason}    -> {:error, reason}
+      _                     -> {:error, :unknown}
+    end
+    notify(state.subscribers, {:reported, result})
   end
 
   defp send_notification(body) do
-    HTTPotion.post(@notify_url, [body: body, headers: @request_headers])
+    @http_client.post(@notify_url, [body: body, headers: @request_headers])
   end
 
   defp notify(subscribers, message), do: Enum.each(subscribers, &send(&1, message))

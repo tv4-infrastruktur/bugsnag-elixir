@@ -7,6 +7,7 @@ defmodule Bugsnag.Mixfile do
       version: "1.4.0-beta2",
       elixir: "~> 1.0",
       package: package,
+      elixirc_paths: elixirc_paths(Mix.env),
       description: """
         An Elixir interface to the Bugsnag API
       """,
@@ -30,6 +31,10 @@ defmodule Bugsnag.Mixfile do
       mod: {Bugsnag, []}
     ]
   end
+
+  # Specifies which paths to compile per environment.
+  defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(_),     do: ["lib"]
 
   defp deps do
     [
