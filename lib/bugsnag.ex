@@ -31,8 +31,7 @@ defmodule Bugsnag do
     Application.put_env(:bugsnag, :api_key, config[:api_key])
 
     children = [
-      worker(Bugsnag.Worker, []),
-      supervisor(Task.Supervisor, [[name: Bugsnag.TaskSupervisor, restart: :transient]])
+      worker(Bugsnag.Worker, [])
     ]
 
     opts = [strategy: :one_for_one, name: Bugsnag.Supervisor]
@@ -69,10 +68,10 @@ defmodule Bugsnag do
     |> to_json
     |> send_notification
     |> case do
-      {:ok, %{status_code: 200}}   -> :ok
-      {:ok, %{status_code: other}} -> {:error, "status_#{other}"}
-      {:error, %{reason: reason}}  -> {:error, reason}
-      _                            -> {:error, :unknown}
+      %HTTPotion.Response{status_code: 200} -> :ok
+      %HTTPotion.Response{status_code: other} -> {:error, "status_#{other}"}
+      %HTTPotion.ErrorResponse{message: message} -> {:error, message}
+      _ -> {:error, :unknown}
     end
   end
 
@@ -81,7 +80,7 @@ defmodule Bugsnag do
   end
 
   defp send_notification(body) do
-    HTTPoison.post(@notify_url, body, @request_headers)
+    HTTPotion.post(@notify_url, [body: body, headers: @request_headers])
   end
 
   defp default_config do

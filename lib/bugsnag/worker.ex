@@ -18,6 +18,8 @@ defmodule Bugsnag.Worker do
     GenServer.cast(__MODULE__, {:enqueue, exception, options})
   end
 
+  def report, do: GenServer.cast(__MODULE__, :report)
+
   def subscribe do
     GenServer.call(__MODULE__, :subscribe)
   end
@@ -63,14 +65,13 @@ defmodule Bugsnag.Worker do
   end
 
   def handle_info(:report, state) do
-    report()
+    report
     {:noreply, state}
   end
 
   defp send_report(payload) do
-    # FIXME do something clever here please
-    # payload
-    # |> to_json
+    payload
+    |> Poison.encode!
     # |> send_notification
     # |> case do
     #   {:ok, %{status_code: 200}}   -> :ok
@@ -80,15 +81,9 @@ defmodule Bugsnag.Worker do
     # end
   end
 
-  def to_json(payload) do
-    payload |> Poison.encode!
-  end
-
   defp send_notification(body) do
-    HTTPoison.post(@notify_url, body, @request_headers)
+    HTTPotion.post(@notify_url, [body: body, headers: @request_headers])
   end
 
   defp notify(subscribers, message), do: Enum.each(subscribers, &send(&1, message))
-
-  defp report, do: GenServer.cast(__MODULE__, :report)
 end

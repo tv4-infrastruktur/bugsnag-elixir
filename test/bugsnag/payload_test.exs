@@ -127,4 +127,30 @@ defmodule Bugsnag.PayloadTest do
     |> length
     == 2
   end
+
+  test "transform payload to json" do
+    [exception, stacktrace] = get_problem()
+    options = []
+    json_payload = Payload.new
+    |> Payload.add_event(exception, stacktrace, options)
+    |> Payload.add_event(exception, stacktrace, options)
+    |> Poison.encode!
+    |> Poison.decode!(keys: :atoms)
+
+    events = Enum.map(json_payload.events, fn(event) -> Map.delete(event, :exceptions) end)
+    json_payload = Map.put(json_payload, :events, events)
+
+    assert json_payload == %{
+      apiKey: "FAKEKEY",
+      notifier: %{
+        name: "Bugsnag Elixir",
+        url: "https://github.com/jarednorman/bugsnag-elixir",
+        version: "1.4.0-beta2"
+      },
+      events: [
+        %{app: %{releaseStage: "test"}, payloadVersion: "2", severity: "error"},
+        %{app: %{releaseStage: "test"}, payloadVersion: "2", severity: "error"}
+      ]
+    }
+  end
 end

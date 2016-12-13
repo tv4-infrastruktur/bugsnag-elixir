@@ -28,11 +28,6 @@ defmodule BugsnagTest do
     end
   end
 
-  test "it can encode json" do
-    assert Bugsnag.to_json(%{foo: 3, bar: "baz"}) ==
-      "{\"foo\":3,\"bar\":\"baz\"}"
-  end
-
   test "it properly sets config" do
     assert Application.get_env(:bugsnag, :release_stage) == "test"
     assert Application.get_env(:bugsnag, :api_key) == "FAKEKEY"

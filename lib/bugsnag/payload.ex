@@ -111,3 +111,12 @@ defmodule Bugsnag.Payload do
     end
   end
 end
+
+defimpl Poison.Encoder, for: Bugsnag.Payload do
+  def encode(payload, options) do
+    payload
+    |> Map.put(:apiKey, payload.api_key)
+    |> Map.delete(:api_key)
+    |> Poison.Encoder.Any.encode(options)
+  end
+end
