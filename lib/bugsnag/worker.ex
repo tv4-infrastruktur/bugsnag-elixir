@@ -2,7 +2,7 @@ defmodule Bugsnag.Worker do
   use GenServer
   require Logger
 
-  @report_interval 100
+  @report_interval 1000
   @notify_url "https://notify.bugsnag.com"
   @request_headers [{"Content-Type", "application/json"}]
 
@@ -15,7 +15,7 @@ defmodule Bugsnag.Worker do
   end
 
   def enqueue(exception, options) do
-    GenServer.cast(__MODULE__, {:enqueue, exception, options})
+    GenServer.cast(__MODULE__, {:enqueue, exception, add_stacktrace(options)})
   end
 
   def report, do: GenServer.cast(__MODULE__, :report)
@@ -31,7 +31,9 @@ defmodule Bugsnag.Worker do
   # GenServer API
 
   def init(_args) do
-    :timer.send_interval(@report_interval, __MODULE__, :report)
+    unless Mix.env == :test do
+      :timer.send_interval(@report_interval, __MODULE__, :report)
+    end
     {:ok, %{subscribers: [], payload: Bugsnag.Payload.new}}
   end
 
@@ -61,7 +63,7 @@ defmodule Bugsnag.Worker do
   def handle_cast(:report, state) do
     send_report(state.payload)
     notify(state.subscribers, {:report, state.payload})
-    {:noreply, state}
+    {:noreply, %{state | payload: Bugsnag.Payload.new}}
   end
 
   def handle_info(:report, state) do
@@ -86,4 +88,9 @@ defmodule Bugsnag.Worker do
   end
 
   defp notify(subscribers, message), do: Enum.each(subscribers, &send(&1, message))
+
+  defp add_stacktrace(options) when is_list(options) do
+    Keyword.put_new(options, :stacktrace, System.stacktrace)
+  end
+  defp add_stacktrace(options), do: options
 end

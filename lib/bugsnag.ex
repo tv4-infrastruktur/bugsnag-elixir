@@ -6,9 +6,6 @@ defmodule Bugsnag do
 
   alias Bugsnag.Payload
 
-  @notify_url "https://notify.bugsnag.com"
-  @request_headers [{"Content-Type", "application/json"}]
-
   def start(_type, _args) do
     config = default_config
     |> Keyword.merge(Application.get_all_env(:bugsnag))
@@ -51,36 +48,7 @@ defmodule Bugsnag do
   (I.e. this might fail silently)
   """
   def report(exception, options \\ []) do
-    Bugsnag.Worker.enqueue(exception, add_stacktrace(options))
-  end
-
-  defp add_stacktrace(options) when is_list(options) do
-    Keyword.put_new(options, :stacktrace, System.stacktrace)
-  end
-  defp add_stacktrace(options), do: options
-
-  @doc "Report the exception and wait for the result. Returns `ok` or `{:error, reason}`."
-  def sync_report(exception, options \\ []) do
-    stacktrace = options[:stacktrace] || System.stacktrace
-
-    Payload.new(options)
-    |> Payload.add_event(exception, stacktrace, options)
-    |> to_json
-    |> send_notification
-    |> case do
-      %HTTPotion.Response{status_code: 200} -> :ok
-      %HTTPotion.Response{status_code: other} -> {:error, "status_#{other}"}
-      %HTTPotion.ErrorResponse{message: message} -> {:error, message}
-      _ -> {:error, :unknown}
-    end
-  end
-
-  def to_json(payload) do
-    payload |> Poison.encode!
-  end
-
-  defp send_notification(body) do
-    HTTPotion.post(@notify_url, [body: body, headers: @request_headers])
+    Bugsnag.Worker.enqueue(exception, options)
   end
 
   defp default_config do
