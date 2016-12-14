@@ -2,10 +2,6 @@ defmodule Bugsnag do
   use Application
   import Supervisor.Spec
 
-  require Logger
-
-  alias Bugsnag.Payload
-
   def start(_type, _args) do
     config = default_config
     |> Keyword.merge(Application.get_all_env(:bugsnag))
