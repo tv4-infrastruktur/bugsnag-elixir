@@ -6,13 +6,13 @@ defmodule Bugsnag.Mixfile do
       app: :bugsnag,
       version: "1.4.0-beta2",
       elixir: "~> 1.0",
-      package: package,
+      package: package(),
       elixirc_paths: elixirc_paths(Mix.env),
       description: """
         An Elixir interface to the Bugsnag API
       """,
       preferred_cli_env: ["test.watch": :test],
-      deps: deps
+      deps: deps()
    ]
   end
 

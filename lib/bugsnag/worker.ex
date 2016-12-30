@@ -67,7 +67,7 @@ defmodule Bugsnag.Worker do
   end
 
   def handle_info(:report, state) do
-    report
+    report()
     {:noreply, state}
   end
 

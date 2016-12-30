@@ -3,7 +3,7 @@ defmodule Bugsnag do
   import Supervisor.Spec
 
   def start(_type, _args) do
-    config = default_config
+    config = default_config()
     |> Keyword.merge(Application.get_all_env(:bugsnag))
     |> Enum.map(fn {k, v} -> {k, eval_config(v)} end)
 
