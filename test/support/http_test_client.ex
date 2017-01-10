@@ -1,5 +1,5 @@
 defmodule Bugsnag.HttpTestClient do
-  def post("https://notify.bugsnag.com", [body: body, headers: [{"Content-Type", "application/json"}]]) do
+  def post("https://notify.bugsnag.com", [body: body, headers: ["Content-Type": "application/json"]]) do
     body
     |> Poison.decode!(keys: :atoms)
     |> notify

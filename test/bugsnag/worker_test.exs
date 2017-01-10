@@ -45,4 +45,9 @@ defmodule BugsnagWorkerTest do
     report()
     assert_receive {:reported, {:error, "something went wrong"}}
   end
+
+  test "not sending a report when there are no enqueued errors" do
+    report()
+    assert_receive :nothing_to_report
+  end
 end

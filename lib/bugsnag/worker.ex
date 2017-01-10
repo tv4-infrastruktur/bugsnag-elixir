@@ -4,7 +4,7 @@ defmodule Bugsnag.Worker do
 
   @report_interval 1000
   @notify_url "https://notify.bugsnag.com"
-  @request_headers [{"Content-Type", "application/json"}]
+  @request_headers ["Content-Type": "application/json"]
   @http_client Application.get_env(:bugsnag, :http_client, HTTPotion)
 
   def start_link do
@@ -71,6 +71,7 @@ defmodule Bugsnag.Worker do
     {:noreply, state}
   end
 
+  defp send_report(%{subscribers: subscribers, payload: %Bugsnag.Payload{events: []}}), do: notify(subscribers, :nothing_to_report)
   defp send_report(state) do
     result = state.payload
     |> Poison.encode!
