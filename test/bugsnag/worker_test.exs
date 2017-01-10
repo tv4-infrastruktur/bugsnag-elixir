@@ -22,7 +22,6 @@ defmodule BugsnagWorkerTest do
     }}
 
     enqueue(RuntimeError.exception("some_other_error"), [])
-    report()
 
     assert_receive {:enqueued, %Bugsnag.Payload{
       events: [%{
