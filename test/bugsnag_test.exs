@@ -46,14 +46,4 @@ defmodule BugsnagTest do
     Bugsnag.start(:temporary, %{})
     assert Application.get_env(:bugsnag, :use_logger) == nil
   end
-
-  test "it sends any crashes to Bugsnag.Logger" do
-    :error_logger.delete_report_handler(Bugsnag.Logger)
-    EventHandler.MessageProxy.start(self())
-    Crasher.start()
-    Crasher.crash
-
-    assert_receive({:enqueued, %Bugsnag.Payload{}})
-    on_exit fn -> Application.delete_env(:bugsnag, :user_logger) end
-  end
 end
