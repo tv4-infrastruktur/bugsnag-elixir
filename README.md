@@ -7,7 +7,7 @@ Capture exceptions and send them to the [Bugsnag](http://bugsnag.com) API!
 ```elixir
 # Add it to your deps in your projects mix.exs
 defp deps do
-  [{:bugsnag, "~> 1.3.2"}]
+  [{:bugsnag, "~> 1.4.0"}]
 end
 
 # Now, list the :bugsnag application as your application dependency:
@@ -40,7 +40,7 @@ Or you can define from which env vars it should be loaded, eg:
 ```elixir
 config :bugsnag, :api_key,        {:system, "YOUR_ENV_VAR" [, optional_default]}
 config :bugsnag, :release_stage,  {:system, "YOUR_ENV_VAR" [, optional_default]}
-config :bugsnag, :ues_logger,     {:system, "YOUR_ENV_VAR" [, optional_default]}
+config :bugsnag, :use_logger,     {:system, "YOUR_ENV_VAR" [, optional_default]}
 ```
 
 Ofcourse you can use regular values as in Installation guide.
