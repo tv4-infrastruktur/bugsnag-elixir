@@ -51,10 +51,9 @@ defmodule BugsnagTest do
     :error_logger.delete_report_handler(Bugsnag.Logger)
     EventHandler.MessageProxy.start(self())
     Crasher.start()
-    Bugsnag.start(:temporary, %{}, EventHandler)
-
     Crasher.crash
 
-    assert_receive({:error_report, _, {_, :crash_report, _}})
+    assert_receive({:enqueued, %Bugsnag.Payload{}})
+    on_exit fn -> Application.delete_env(:bugsnag, :user_logger) end
   end
 end
