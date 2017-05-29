@@ -11,9 +11,9 @@ defmodule Crasher do
 
   def crash, do: GenServer.cast(__MODULE__, :crash)
 
-  def handle_cast(:crash, _) do
+  def handle_cast(:crash, []) do
     require Logger
-    Logger.info "Crasher.handle_cast/2: crashing"
-    {:noreply, 1/0}
+    send :nobody, :something
+    {:noreply, []}
   end
 end
