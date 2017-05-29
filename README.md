@@ -56,13 +56,6 @@ rescue
 end
 ```
 
-In some cases you might want to send the report synchronously, to make sure that it got sent. You can do that with:
-
-```elixir
-# ...an exception occured
-  Bugsnag.sync_report(exception)
-```
-
 ### Options
 
 These are optional fields to fill the bugsnag report with more information, depending on your specific usage scenario.
@@ -91,4 +84,3 @@ Set the `use_logger` option to true in your application's `config.exs`.
 So long as `:bugsnag` is started, any [SASL](http://www.erlang.org/doc/apps/sasl/error_logging.html)
 compliant processes that crash will send an error report to the `Bugsnag.Logger`.
 The logger will take care of sending the error to Bugsnag.
-
