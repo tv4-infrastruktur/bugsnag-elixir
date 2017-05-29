@@ -2,15 +2,13 @@ defmodule Bugsnag do
   use Application
   import Supervisor.Spec
 
-  def start(_type, _args) do
+  def start(_type, _args, logger \\ Bugsnag.Logger) do
     config = default_config()
     |> Keyword.merge(Application.get_all_env(:bugsnag))
     |> Enum.map(fn {k, v} -> {k, eval_config(v)} end)
 
-    case config[:use_logger] |> to_string do
-      "true" ->
-        :error_logger.add_report_handler(Bugsnag.Logger)
-      _ -> :ok
+    if (config[:use_logger] |> to_string) == "true" do
+      :error_logger.add_report_handler(logger)
     end
 
     # Update Application config with evaluated configuration
@@ -43,9 +41,11 @@ defmodule Bugsnag do
   Report the exception without waiting for the result of the Bugsnag API call.
   (I.e. this might fail silently)
   """
-  def report(exception, options \\ []) do
+  def report(exception, options \\ [])
+  def report(exception, options) when is_list(options) do
     Bugsnag.Worker.enqueue(exception, options)
   end
+  def report(_, _), do: true
 
   defp default_config do
     [

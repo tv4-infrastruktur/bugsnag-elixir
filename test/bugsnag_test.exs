@@ -20,18 +20,41 @@ defmodule BugsnagTest do
     try do
       raise "foo bar"
     rescue
-      exception -> Bugsnag.report(exception)
+      exception ->
+        try do
+          Bugsnag.report(exception)
+        rescue
+          _ -> assert false, "Should have worked"
+        end
     end
   end
 
   test "it properly sets config" do
     assert Application.get_env(:bugsnag, :release_stage) == "test"
     assert Application.get_env(:bugsnag, :api_key) == "FAKEKEY"
-    assert Application.get_env(:bugsnag, :use_logger) == false
   end
 
   test "it enqueues errors that are periodically reported to Bugsnag" do
     Bugsnag.report(RuntimeError.exception("some_error"), [])
-    assert_receive {:enqueued, %Bugsnag.Payload{api_key: "FAKEKEY", events: [%{app: %{releaseStage: "test"}, exceptions: [%{errorClass: RuntimeError, message: "some_error", stacktrace: _}], payloadVersion: "2", severity: "error"}], notifier: %{name: "Bugsnag Elixir", url: "https://github.com/jarednorman/bugsnag-elixir", version: "1.4.0-beta2"}}}, 250
+    assert_receive {:enqueued, %Bugsnag.Payload{api_key: "FAKEKEY", events: [%{app: %{releaseStage: "test"}, exceptions: [%{errorClass: RuntimeError, message: "some_error", stacktrace: _}], payloadVersion: "2", severity: "error"}], notifier: %{name: "Bugsnag Elixir", url: "https://github.com/jarednorman/bugsnag-elixir", version: "1.4.0"}}}, 250
+  end
+
+  test "it should not explode with logger unset" do
+    Application.put_env(:bugsnag, :use_logger, nil)
+    on_exit fn -> Application.delete_env(:bugsnag, :use_logger) end
+
+    Bugsnag.start(:temporary, %{})
+    assert Application.get_env(:bugsnag, :use_logger) == nil
+  end
+
+  test "it sends any crashes to Bugsnag.Logger" do
+    :error_logger.delete_report_handler(Bugsnag.Logger)
+    EventHandler.MessageProxy.start(self())
+    Crasher.start()
+    Bugsnag.start(:temporary, %{}, EventHandler)
+
+    Crasher.crash
+
+    assert_receive({:error_report, _, {_, :crash_report, _}})
   end
 end

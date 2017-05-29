@@ -27,6 +27,7 @@ defmodule Bugsnag.Mixfile do
 
   # Specifies which paths to compile per environment.
   defp elixirc_paths(:test), do: ["lib", "test/support"]
+  defp elixirc_paths(:dev),  do: elixirc_paths(:test)
   defp elixirc_paths(_),     do: ["lib"]
 
   defp deps do
