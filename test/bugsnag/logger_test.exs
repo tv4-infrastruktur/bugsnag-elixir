@@ -72,10 +72,10 @@ defmodule Bugsnag.LoggerTest do
   test "logging exceptions from Tasks" do
     log_msg = capture_log fn ->
       Task.start fn -> Float.parse("12.345e308") end
-      Process.sleep 100
+      Process.sleep 250
     end
 
-    assert_receive({:enqueued, %Bugsnag.Payload{}}, 250)
+    assert_received({:enqueued, %Bugsnag.Payload{}})
     assert log_msg =~ "(ArgumentError) argument error"
   end
 
@@ -84,10 +84,10 @@ defmodule Bugsnag.LoggerTest do
 
     log_msg = capture_log fn ->
       GenServer.cast(pid, :fail)
-      Process.sleep 100
+      Process.sleep 250
     end
 
     assert log_msg =~ "(stop) bad cast: :fail" || log_msg =~ "but no handle_cast"
-    assert_receive({:enqueued, %Bugsnag.Payload{}}, 250)
+    assert_received({:enqueued, %Bugsnag.Payload{}})
   end
 end
