@@ -145,7 +145,7 @@ defmodule Bugsnag.PayloadTest do
       notifier: %{
         name: "Bugsnag Elixir",
         url: "https://github.com/jarednorman/bugsnag-elixir",
-        version: "1.4.0-beta2"
+        version: "1.4.0"
       },
       events: [
         %{app: %{releaseStage: "test"}, payloadVersion: "2", severity: "error"},

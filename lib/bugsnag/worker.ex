@@ -48,18 +48,11 @@ defmodule Bugsnag.Worker do
     {:reply, :ok, %{state | subscribers: List.delete(state.subscribers, caller)}}
   end
 
-  def handle_cast({:enqueue, exception, options}, state) when is_map(exception) do
-    payload = if Exception.exception?(exception) do
-      payload = Bugsnag.Payload.add_event(state.payload, exception, options[:stacktrace], options)
-      notify(state.subscribers, {:enqueued, payload})
-      payload
-    else
-      state.payload
-    end
+  def handle_cast({:enqueue, exception, options}, state) do
+    payload = Bugsnag.Payload.add_event(state.payload, exception, options[:stacktrace], options)
+    notify(state.subscribers, {:enqueued, payload})
+
     {:noreply, %{state | payload: payload}}
-  end
-  def handle_cast({:enqueue, _exception, _options}, state) do
-    {:noreply, state}
   end
   def handle_cast(:report, state) do
     send_report(state)

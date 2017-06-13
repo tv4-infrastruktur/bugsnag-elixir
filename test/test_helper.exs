@@ -1,4 +1,3 @@
 Code.load_file("test/support/error_server.exs")
-#Bugsnag.start(:ok, :ok)
-ExUnit.configure(exclude: [pending: true])
+Bugsnag.start(:ok, :ok)
 ExUnit.start

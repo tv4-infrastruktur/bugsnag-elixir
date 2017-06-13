@@ -64,31 +64,30 @@ defmodule Bugsnag.LoggerTest do
     refute_receive({:enqueued, %Bugsnag.Payload{}})
   end
 
-  @tag :pending
   test "logging exceptions from special processes" do
     :proc_lib.spawn fn -> Float.parse("12.345e308") end
     assert_receive({:enqueued, %Bugsnag.Payload{}}, 250)
   end
 
-  @tag :pending
   test "logging exceptions from Tasks" do
     log_msg = capture_log fn ->
       Task.start fn -> Float.parse("12.345e308") end
+      Process.sleep 250
     end
 
-    assert_receive({:enqueued, %Bugsnag.Payload{}}, 250)
+    assert_received({:enqueued, %Bugsnag.Payload{}})
     assert log_msg =~ "(ArgumentError) argument error"
   end
 
-  @tag :pending
   test "logging exceptions from GenServers" do
     {:ok, pid} = ErrorServer.start
 
     log_msg = capture_log fn ->
       GenServer.cast(pid, :fail)
+      Process.sleep 250
     end
 
-    assert_receive({:enqueued, %Bugsnag.Payload{}}, 250)
-    assert log_msg =~ "(stop) bad cast: :fail"
+    assert log_msg =~ "(stop) bad cast: :fail" || log_msg =~ "but no handle_cast"
+    assert_received({:enqueued, %Bugsnag.Payload{}})
   end
 end

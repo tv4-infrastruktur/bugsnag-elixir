@@ -7,7 +7,7 @@ Capture exceptions and send them to the [Bugsnag](http://bugsnag.com) API!
 ```elixir
 # Add it to your deps in your projects mix.exs
 defp deps do
-  [{:bugsnag, "~> 1.3.2"}]
+  [{:bugsnag, "~> 1.4.0"}]
 end
 
 # Now, list the :bugsnag application as your application dependency:
@@ -40,7 +40,7 @@ Or you can define from which env vars it should be loaded, eg:
 ```elixir
 config :bugsnag, :api_key,        {:system, "YOUR_ENV_VAR" [, optional_default]}
 config :bugsnag, :release_stage,  {:system, "YOUR_ENV_VAR" [, optional_default]}
-config :bugsnag, :ues_logger,     {:system, "YOUR_ENV_VAR" [, optional_default]}
+config :bugsnag, :use_logger,     {:system, "YOUR_ENV_VAR" [, optional_default]}
 ```
 
 Ofcourse you can use regular values as in Installation guide.
@@ -54,13 +54,6 @@ try do
 rescue
   exception -> Bugsnag.report(exception)
 end
-```
-
-In some cases you might want to send the report synchronously, to make sure that it got sent. You can do that with:
-
-```elixir
-# ...an exception occured
-  Bugsnag.sync_report(exception)
 ```
 
 ### Options
@@ -91,4 +84,3 @@ Set the `use_logger` option to true in your application's `config.exs`.
 So long as `:bugsnag` is started, any [SASL](http://www.erlang.org/doc/apps/sasl/error_logging.html)
 compliant processes that crash will send an error report to the `Bugsnag.Logger`.
 The logger will take care of sending the error to Bugsnag.
-
